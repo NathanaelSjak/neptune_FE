@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 
 const classes = [
@@ -21,12 +22,48 @@ const leaderboardData = {
 };
 
 const Leaderboard = () => {
+  const [user, setUser] = useState(null);
   const [selectedClass, setSelectedClass] = useState(classes[0].id);
+  const navigate = useNavigate();
+
   const data = leaderboardData[selectedClass] || [];
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const isAuthenticated = localStorage.getItem("isAuthenticated");
+    const userData = localStorage.getItem("user");
+
+    if (!isAuthenticated || !userData) {
+      navigate("/");
+      return;
+    }
+
+    try {
+      const userObj = JSON.parse(userData);
+      setUser(userObj);
+    } catch (error) {
+      console.error("Error parsing user data:", error);
+      navigate("/");
+    }
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("isAuthenticated");
+    navigate("/");
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <>
-      <Navbar />
+      <Navbar user={user} onLogout={handleLogout} />
       <div className="min-h-[80vh] flex flex-col items-center bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 px-2 py-8">
         <div className="bg-white/95 shadow-2xl rounded-2xl p-0 w-full max-w-3xl flex flex-col gap-0 border border-blue-100">
           {/* Card Header */}
@@ -36,6 +73,15 @@ const Leaderboard = () => {
             </span>
             <h2 className="text-2xl font-bold text-blue-700">Leaderboard</h2>
           </div>
+
+          {/* Student Info */}
+          <div className="px-8 pt-4 pb-2 bg-blue-50">
+            <div className="text-sm text-blue-700">
+              <span className="font-semibold">Student:</span> {user.name} (
+              {user.nim})
+            </div>
+          </div>
+
           <div className="px-8 py-6 flex flex-col gap-6">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
               <div className="flex items-center gap-2">

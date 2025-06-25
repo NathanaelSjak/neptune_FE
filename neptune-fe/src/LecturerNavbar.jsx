@@ -2,13 +2,14 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 
 const navLinks = [
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/contests", label: "Contests" },
-  { to: "/submission", label: "Submission" },
-  { to: "/leaderboard", label: "Leaderboard" },
+  { to: "/lecturer/dashboard", label: "Dashboard" },
+  { to: "/lecturer/classes", label: "My Classes" },
+  { to: "/lecturer/contests", label: "Contests" },
+  { to: "/lecturer/submissions", label: "Submissions" },
+  { to: "/lecturer/downloads", label: "Downloads" },
 ];
 
-const Navbar = ({ user, onLogout }) => {
+const LecturerNavbar = ({ user, onLogout }) => {
   const location = useLocation();
 
   return (
@@ -16,7 +17,7 @@ const Navbar = ({ user, onLogout }) => {
       {/* Left: Logo + Links */}
       <div className="flex items-center gap-8">
         <Link
-          to="/dashboard"
+          to="/lecturer/dashboard"
           className="font-extrabold text-2xl text-blue-700 tracking-wide hover:text-blue-900 transition-colors"
         >
           NEPTUNE
@@ -42,11 +43,12 @@ const Navbar = ({ user, onLogout }) => {
       <div className="flex flex-col items-end">
         <div className="bg-white/80 border border-blue-100 rounded-lg px-4 py-2 shadow flex flex-col items-end">
           <span className="font-bold text-blue-700 text-base">
-            {user?.name || "Student"}
+            {user?.name || "Lecturer"}
           </span>
           <span className="text-xs text-gray-600">
-            NIM: {user?.nim || "N/A"}
+            {user?.email || "lecturer@binus.ac.id"}
           </span>
+          <span className="text-xs text-blue-600 font-semibold">Lecturer</span>
           <button
             className="btn btn-sm btn-outline btn-primary mt-2 w-full"
             onClick={onLogout}
@@ -59,4 +61,4 @@ const Navbar = ({ user, onLogout }) => {
   );
 };
 
-export default Navbar;
+export default LecturerNavbar;
