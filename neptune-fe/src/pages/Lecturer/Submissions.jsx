@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import LecturerNavbar from "./LecturerNavbar";
+import LecturerNavbar from "../../components/Navbar/LecturerNavbar";
 
 // Mock submission data for lecturer view
 const mockSubmissions = [

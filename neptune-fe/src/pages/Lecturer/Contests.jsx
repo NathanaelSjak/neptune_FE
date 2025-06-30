@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import LecturerNavbar from "./LecturerNavbar";
+import LecturerNavbar from "../../components/Navbar/LecturerNavbar";
 
 // Mock contest data for lecturer management
 const mockLecturerContests = [

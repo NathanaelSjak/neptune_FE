@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import AdminNavbar from "./AdminNavbar";
+import AdminNavbar from "../../components/Navbar/AdminNavbar";
 
 // Mock data for reports
 const mockReportData = {
