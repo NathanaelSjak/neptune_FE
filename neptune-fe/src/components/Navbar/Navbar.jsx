@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuthState, useAuthActions } from "../../hooks/useAuth";
 
 const navLinks = [
   { to: "/dashboard", label: "Dashboard" },
@@ -8,8 +9,18 @@ const navLinks = [
   { to: "/leaderboard", label: "Leaderboard" },
 ];
 
-const Navbar = ({ user, onLogout }) => {
+const Navbar = () => {
   const location = useLocation();
+  const { user } = useAuthState();
+  const { logout } = useAuthActions();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   return (
     <div className="navbar bg-gradient-to-r from-blue-50 via-white to-blue-100 shadow-lg rounded-b-xl px-8 py-4 flex justify-between items-center mb-10">
@@ -49,7 +60,7 @@ const Navbar = ({ user, onLogout }) => {
           </span>
           <button
             className="btn btn-sm btn-outline btn-primary mt-2 w-full"
-            onClick={onLogout}
+            onClick={handleLogout}
           >
             Logout
           </button>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import AdminNavbar from "../../components/Navbar/AdminNavbar";
+import { useAuthState } from "../../hooks/useAuth";
 
 // Mock admin data
 const mockAdminData = {
@@ -67,46 +68,13 @@ const mockAdminData = {
 };
 
 const AdminDashboard = () => {
-  const [user, setUser] = useState(null);
+  const { user } = useAuthState();
   const [adminData, setAdminData] = useState(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is authenticated and is an admin
-    const isAuthenticated = localStorage.getItem("isAuthenticated");
-    const userData = localStorage.getItem("user");
-
-    if (!isAuthenticated || !userData) {
-      navigate("/");
-      return;
-    }
-
-    try {
-      const userObj = JSON.parse(userData);
-
-      // Check if user is an admin
-      if (userObj.role !== "admin") {
-        if (userObj.role === "lecturer") {
-          navigate("/lecturer/dashboard");
-        } else {
-          navigate("/dashboard");
-        }
-        return;
-      }
-
-      setUser(userObj);
-      setAdminData(mockAdminData);
-    } catch (error) {
-      console.error("Error parsing user data:", error);
-      navigate("/");
-    }
-  }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("isAuthenticated");
-    navigate("/");
-  };
+    // Set mock admin data
+    setAdminData(mockAdminData);
+  }, []);
 
   const formatDateTime = (dateTime) => {
     return new Date(dateTime).toLocaleString("en-US", {
@@ -149,14 +117,14 @@ const AdminDashboard = () => {
   if (!user || !adminData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        Loading...
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
     <>
-      <AdminNavbar user={user} onLogout={handleLogout} />
+      <AdminNavbar />
       <div className="min-h-[80vh] flex flex-col items-center bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 px-2 py-8">
         <div className="bg-white/90 shadow-2xl rounded-2xl p-10 w-full max-w-2xl flex flex-col items-center mb-12 border border-blue-100">
           <h1 className="text-4xl font-extrabold text-blue-700 mb-3 text-center drop-shadow">
@@ -226,138 +194,122 @@ const AdminDashboard = () => {
                   </div>
                   <div className="text-sm text-gray-600">Contests</div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                <div className="card bg-white border border-gray-200 shadow-lg rounded-xl p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="material-icons text-blue-500 text-2xl">
-                      assignment
-                    </span>
-                    <h3 className="font-bold text-blue-700">
-                      Cases & Submissions
-                    </h3>
+                <div className="card bg-red-50 border border-red-200 shadow-lg rounded-xl p-6 text-center">
+                  <span className="material-icons text-red-500 text-3xl mb-2">
+                    description
+                  </span>
+                  <div className="text-2xl font-bold text-red-700">
+                    {adminData.systemStats.totalCases}
                   </div>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="font-semibold">Total Cases:</span>{" "}
-                      {adminData.systemStats.totalCases}
-                    </div>
-                    <div>
-                      <span className="font-semibold">Total Submissions:</span>{" "}
-                      {adminData.systemStats.totalSubmissions}
-                    </div>
-                    <div>
-                      <span className="font-semibold">Active Contests:</span>{" "}
-                      {adminData.systemStats.activeContests}
-                    </div>
-                  </div>
+                  <div className="text-sm text-gray-600">Test Cases</div>
                 </div>
 
-                <div className="card bg-white border border-gray-200 shadow-lg rounded-xl p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="material-icons text-green-500 text-2xl">
-                      health_and_safety
-                    </span>
-                    <h3 className="font-bold text-green-700">System Health</h3>
+                <div className="card bg-indigo-50 border border-indigo-200 shadow-lg rounded-xl p-6 text-center">
+                  <span className="material-icons text-indigo-500 text-3xl mb-2">
+                    upload
+                  </span>
+                  <div className="text-2xl font-bold text-indigo-700">
+                    {adminData.systemStats.totalSubmissions}
                   </div>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="font-semibold">Status:</span>{" "}
-                      {adminData.systemStats.systemHealth}
-                    </div>
-                    <div>
-                      <span className="font-semibold">Uptime:</span> 99.9%
-                    </div>
-                    <div>
-                      <span className="font-semibold">Last Backup:</span> 2
-                      hours ago
-                    </div>
-                  </div>
+                  <div className="text-sm text-gray-600">Submissions</div>
                 </div>
 
-                <div className="card bg-white border border-gray-200 shadow-lg rounded-xl p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="material-icons text-purple-500 text-2xl">
-                      settings
-                    </span>
-                    <h3 className="font-bold text-purple-700">Quick Actions</h3>
+                <div className="card bg-teal-50 border border-teal-200 shadow-lg rounded-xl p-6 text-center">
+                  <span className="material-icons text-teal-500 text-3xl mb-2">
+                    play_circle
+                  </span>
+                  <div className="text-2xl font-bold text-teal-700">
+                    {adminData.systemStats.activeContests}
                   </div>
-                  <div className="space-y-2">
-                    <Link
-                      to="/admin/classes"
-                      className="btn btn-primary btn-sm w-full"
-                    >
-                      Manage Classes
-                    </Link>
-                    <Link
-                      to="/admin/users"
-                      className="btn btn-outline btn-primary btn-sm w-full"
-                    >
-                      Manage Users
-                    </Link>
-                    <Link
-                      to="/admin/contests"
-                      className="btn btn-outline btn-primary btn-sm w-full"
-                    >
-                      Manage Contests
-                    </Link>
+                  <div className="text-sm text-gray-600">Active Contests</div>
+                </div>
+
+                <div className="card bg-emerald-50 border border-emerald-200 shadow-lg rounded-xl p-6 text-center">
+                  <span className="material-icons text-emerald-500 text-3xl mb-2">
+                    health_and_safety
+                  </span>
+                  <div className="text-lg font-bold text-emerald-700">
+                    {adminData.systemStats.systemHealth}
                   </div>
+                  <div className="text-sm text-gray-600">System Health</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* System Alerts */}
+        {/* Quick Actions */}
         <div className="w-full max-w-6xl mb-8">
-          <div className="bg-white/95 shadow-2xl rounded-2xl p-0 border border-blue-100">
-            <div className="flex items-center gap-3 px-8 py-6 border-b border-blue-100 rounded-t-2xl bg-gradient-to-r from-blue-50 to-blue-100">
-              <span className="material-icons text-blue-500 text-3xl">
-                notifications
+          <h3 className="text-xl font-bold text-blue-700 mb-4 text-center">
+            Quick Actions
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Link
+              to="/admin/classes"
+              className="card bg-white/80 border border-blue-100 shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-200 rounded-xl p-6 flex flex-col items-center gap-2 cursor-pointer group"
+            >
+              <span className="material-icons text-blue-500 text-4xl mb-2 group-hover:text-blue-700 transition-colors">
+                school
               </span>
-              <h2 className="text-2xl font-bold text-blue-700">
-                System Alerts
+              <h2 className="card-title text-lg font-bold text-blue-700 group-hover:text-blue-900">
+                Manage Classes
               </h2>
-            </div>
+              <p className="text-gray-600 text-center text-sm">
+                Create and manage classes
+              </p>
+            </Link>
 
-            <div className="p-8">
-              {adminData.systemAlerts.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No system alerts at this time
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {adminData.systemAlerts.map((alert) => (
-                    <div
-                      key={alert.id}
-                      className={`alert ${getAlertColor(alert.type)}`}
-                    >
-                      <span className="material-icons">
-                        {alert.type === "warning"
-                          ? "warning"
-                          : alert.type === "error"
-                          ? "error"
-                          : alert.type === "success"
-                          ? "check_circle"
-                          : "info"}
-                      </span>
-                      <div>
-                        <div className="font-semibold">{alert.message}</div>
-                        <div className="text-xs opacity-75">
-                          {formatDateTime(alert.timestamp)}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <Link
+              to="/admin/users"
+              className="card bg-white/80 border border-blue-100 shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-200 rounded-xl p-6 flex flex-col items-center gap-2 cursor-pointer group"
+            >
+              <span className="material-icons text-blue-500 text-4xl mb-2 group-hover:text-blue-700 transition-colors">
+                people
+              </span>
+              <h2 className="card-title text-lg font-bold text-blue-700 group-hover:text-blue-900">
+                Manage Users
+              </h2>
+              <p className="text-gray-600 text-center text-sm">
+                Manage students and lecturers
+              </p>
+            </Link>
+
+            <Link
+              to="/admin/contests"
+              className="card bg-white/80 border border-blue-100 shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-200 rounded-xl p-6 flex flex-col items-center gap-2 cursor-pointer group"
+            >
+              <span className="material-icons text-blue-500 text-4xl mb-2 group-hover:text-blue-700 transition-colors">
+                emoji_events
+              </span>
+              <h2 className="card-title text-lg font-bold text-blue-700 group-hover:text-blue-900">
+                Manage Contests
+              </h2>
+              <p className="text-gray-600 text-center text-sm">
+                Create and manage contests
+              </p>
+            </Link>
+
+            <Link
+              to="/admin/reports"
+              className="card bg-white/80 border border-blue-100 shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-200 rounded-xl p-6 flex flex-col items-center gap-2 cursor-pointer group"
+            >
+              <span className="material-icons text-blue-500 text-4xl mb-2 group-hover:text-blue-700 transition-colors">
+                assessment
+              </span>
+              <h2 className="card-title text-lg font-bold text-blue-700 group-hover:text-blue-900">
+                View Reports
+              </h2>
+              <p className="text-gray-600 text-center text-sm">
+                System analytics and reports
+              </p>
+            </Link>
           </div>
         </div>
 
-        {/* Recent Activities */}
-        <div className="w-full max-w-6xl">
+        {/* Recent Activities and Alerts */}
+        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Recent Activities */}
           <div className="bg-white/95 shadow-2xl rounded-2xl p-0 border border-blue-100">
             <div className="flex items-center gap-3 px-8 py-6 border-b border-blue-100 rounded-t-2xl bg-gradient-to-r from-blue-50 to-blue-100">
               <span className="material-icons text-blue-500 text-3xl">
@@ -368,36 +320,62 @@ const AdminDashboard = () => {
               </h2>
             </div>
 
-            <div className="p-8">
-              {adminData.recentActivities.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No recent activities
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {adminData.recentActivities.map((activity) => (
-                    <div
-                      key={activity.id}
-                      className="card bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-lg p-4"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="material-icons text-blue-500 text-xl">
-                          {getActivityIcon(activity.type)}
-                        </span>
-                        <div className="flex-1">
-                          <div className="text-sm text-gray-700">
-                            {activity.description}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            by {activity.user} •{" "}
-                            {formatDateTime(activity.timestamp)}
-                          </div>
-                        </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                {adminData.recentActivities.map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border border-gray-100"
+                  >
+                    <span className="material-icons text-blue-500 text-xl mt-1">
+                      {getActivityIcon(activity.type)}
+                    </span>
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-700 mb-1">
+                        {activity.description}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <span>{activity.user}</span>
+                        <span>•</span>
+                        <span>{formatDateTime(activity.timestamp)}</span>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* System Alerts */}
+          <div className="bg-white/95 shadow-2xl rounded-2xl p-0 border border-blue-100">
+            <div className="flex items-center gap-3 px-8 py-6 border-b border-blue-100 rounded-t-2xl bg-gradient-to-r from-blue-50 to-blue-100">
+              <span className="material-icons text-blue-500 text-3xl">
+                notifications
+              </span>
+              <h2 className="text-2xl font-bold text-blue-700">
+                System Alerts
+              </h2>
+            </div>
+
+            <div className="p-6">
+              <div className="space-y-4">
+                {adminData.systemAlerts.map((alert) => (
+                  <div
+                    key={alert.id}
+                    className={`alert ${getAlertColor(alert.type)} shadow-lg`}
+                  >
+                    <span className="material-icons">
+                      {alert.type === "warning" ? "warning" : "info"}
+                    </span>
+                    <div>
+                      <div className="font-medium">{alert.message}</div>
+                      <div className="text-xs opacity-75">
+                        {formatDateTime(alert.timestamp)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

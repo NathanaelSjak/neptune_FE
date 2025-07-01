@@ -1,53 +1,28 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import Navbar from "../../components/Navbar/Navbar";
+import { useAuthState } from "../../hooks/useAuth";
 
 const Dashboard = () => {
-  const [user, setUser] = useState(null);
+  const { user } = useAuthState();
   const [currentSemester, setCurrentSemester] = useState("2024/2025-1");
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // Check if user is authenticated
-    const isAuthenticated = localStorage.getItem("isAuthenticated");
-    const userData = localStorage.getItem("user");
-
-    if (!isAuthenticated || !userData) {
-      navigate("/");
-      return;
-    }
-
-    try {
-      const userObj = JSON.parse(userData);
-      setUser(userObj);
-    } catch (error) {
-      console.error("Error parsing user data:", error);
-      navigate("/");
-    }
-  }, [navigate]);
 
   // Filter classes for current semester only
   const currentSemesterClasses =
     user?.enrolledClasses?.filter((cls) => cls.semester === currentSemester) ||
     [];
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("isAuthenticated");
-    navigate("/");
-  };
-
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        Loading...
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
     <>
-      <Navbar user={user} onLogout={handleLogout} />
+      <Navbar />
       <div className="min-h-[80vh] flex flex-col justify-center items-center bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 px-2 py-8">
         <div className="bg-white/90 shadow-2xl rounded-2xl p-10 w-full max-w-2xl flex flex-col items-center mb-12 border border-blue-100">
           <h1 className="text-4xl font-extrabold text-blue-700 mb-3 text-center drop-shadow">

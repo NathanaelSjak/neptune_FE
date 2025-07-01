@@ -1,69 +1,52 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useAuthActions, useAuthState } from "../../hooks/useAuth";
 
 const Login = () => {
   const [nim, setNim] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
+  const { loading, error } = useAuthState();
+  const { login, clearError } = useAuthActions();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setIsLoading(true);
+    clearError();
 
-    // Validate NIM format (BINUS NIM is typically 8 digits, but admin can use different format)
+    // Validate NIM format
     if (!nim) {
-      setError("Please enter your NIM/ID");
-      setIsLoading(false);
       return;
     }
 
     if (!password) {
-      setError("Please enter your password");
-      setIsLoading(false);
       return;
     }
 
     try {
-      // TODO: Replace with actual BINUS API call
-      // For now, simulate API call with mock data
-      const response = await simulateBinusLogin(nim, password);
-
-      if (response.success) {
-        // Store user data in localStorage or context
-        localStorage.setItem("user", JSON.stringify(response.user));
-        localStorage.setItem("isAuthenticated", "true");
-
-        // Redirect based on role
-        if (response.user.role === "admin") {
-          navigate("/admin/dashboard");
-        } else if (response.user.role === "lecturer") {
-          navigate("/lecturer/dashboard");
-        } else {
-          navigate("/dashboard");
-        }
-      } else {
-        setError(response.message || "Invalid credentials");
-      }
+      await login({ nim, password });
+      // Navigation is handled by the auth hook
     } catch (err) {
-      setError("Login failed. Please try again.");
-    } finally {
-      setIsLoading(false);
+      // Error is handled by the auth hook
+      console.error("Login failed:", err);
     }
   };
 
-  // Mock function to simulate BINUS login API
-  const simulateBinusLogin = async (nim, password) => {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+  // Fallback to mock data if API is not available
+  const handleMockLogin = async (e) => {
+    e.preventDefault();
+    clearError();
 
-    // Mock validation - in real implementation, this would call BINUS API
-    if (nim === "12345678" && password === "password") {
-      return {
-        success: true,
-        user: {
+    if (!nim || !password) {
+      return;
+    }
+
+    try {
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      let user = null;
+
+      // Mock validation
+      if (nim === "12345678" && password === "password") {
+        user = {
           nim: nim,
           name: "John Doe",
           email: `${nim}@binus.ac.id`,
@@ -88,12 +71,9 @@ const Login = () => {
               semester: "2024/2025-1",
             },
           ],
-        },
-      };
-    } else if (nim === "87654321" && password === "lecturer") {
-      return {
-        success: true,
-        user: {
+        };
+      } else if (nim === "87654321" && password === "lecturer") {
+        user = {
           nim: nim,
           name: "Dr. Sarah Johnson",
           email: "sarah.johnson@binus.ac.id",
@@ -119,25 +99,26 @@ const Login = () => {
               semester: "2024/2025-1",
             },
           ],
-        },
-      };
-    } else if (nim === "admin" && password === "admin123") {
-      return {
-        success: true,
-        user: {
+        };
+      } else if (nim === "admin" && password === "admin123") {
+        user = {
           nim: nim,
           name: "Dr. Michael Chen",
           email: "michael.chen@binus.ac.id",
           role: "admin",
           department: "Software Laboratory Center",
           assignedClasses: [],
-        },
-      };
-    } else {
-      return {
-        success: false,
-        message: "Invalid NIM/ID or password",
-      };
+        };
+      }
+
+      if (user) {
+        // Use the auth hook's login function with mock data
+        await login({ nim, password }, { mockData: user });
+      } else {
+        throw new Error("Invalid credentials");
+      }
+    } catch (err) {
+      console.error("Mock login failed:", err);
     }
   };
 
@@ -150,7 +131,7 @@ const Login = () => {
           <div className="mb-6">
             <div className="w-24 h-12 mx-auto mb-2 flex items-center justify-center">
               {/* Replace with <img src="/path/to/logo.png" alt="Logo" /> */}
-              <span className="font-bold text-blue-700 text-lg">LOGO</span>
+              <span className="font-bold text-blue-700 text-lg">NEPTUNE</span>
             </div>
             <div className="text-center text-xs text-gray-500 font-semibold leading-tight">
               BINUS
@@ -172,7 +153,7 @@ const Login = () => {
                   placeholder="NIM/ID"
                   value={nim}
                   onChange={(e) => setNim(e.target.value)}
-                  disabled={isLoading}
+                  disabled={loading}
                 />
               </label>
               <div className="text-xs text-gray-500 mt-1">
@@ -189,7 +170,7 @@ const Login = () => {
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
+                  disabled={loading}
                 />
               </label>
               <div className="text-xs text-gray-500 mt-1">
@@ -199,55 +180,37 @@ const Login = () => {
 
             {error && (
               <div className="alert alert-error text-sm">
-                <span className="material-icons text-red-600">error</span>
+                <span className="material-icons">error</span>
                 <span>{error}</span>
               </div>
             )}
 
             <button
               type="submit"
-              className={`btn btn-primary w-full mt-2 ${
-                isLoading ? "loading" : ""
-              }`}
-              disabled={isLoading}
+              className={`btn btn-primary w-full ${loading ? "loading" : ""}`}
+              disabled={loading}
             >
-              {isLoading ? "Logging in..." : "Login"}
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
+
+            {/* Fallback button for development */}
+            <button
+              type="button"
+              onClick={handleMockLogin}
+              className="btn btn-outline btn-sm w-full"
+              disabled={loading}
+            >
+              Use Mock Data (Dev)
             </button>
           </form>
 
-          {/* Demo Credentials */}
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="text-xs text-blue-700 font-semibold mb-1">
-              Demo Credentials:
-            </div>
-            <div className="text-xs text-blue-600 space-y-1">
-              <div>
-                <span className="font-semibold">Student:</span> NIM: 12345678,
-                Password: password
-              </div>
-              <div>
-                <span className="font-semibold">Lecturer:</span> NIM: 87654321,
-                Password: lecturer
-              </div>
-              <div>
-                <span className="font-semibold">Admin:</span> ID: admin,
-                Password: admin123
-              </div>
-            </div>
+          {/* Footer */}
+          <div className="mt-6 text-center text-xs text-gray-500">
+            <p>© 2024 BINUS University</p>
+            <p>Software Laboratory Center</p>
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="absolute bottom-8 left-0 right-0 text-center text-white text-sm z-20">
-        LF & XY
-        <br />
-        Software Laboratory Center
-        <br />
-        <a href="mailto:academic.slc@binus.edu" className="underline">
-          academic.slc@binus.edu
-        </a>
-      </footer>
 
       {/* Google Fonts for Material Icons */}
       <link

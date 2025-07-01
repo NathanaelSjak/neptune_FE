@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import Navbar from "../../components/Navbar/Navbar";
+import { Link } from "react-router-dom";
+import LecturerNavbar from "../../components/Navbar/LecturerNavbar";
+import { useAuthState } from "../../hooks/useAuth";
 
 // Mock lecturer data
 const mockLecturerData = {
@@ -72,42 +73,13 @@ const mockLecturerData = {
 };
 
 const LecturerDashboard = () => {
-  const [user, setUser] = useState(null);
+  const { user } = useAuthState();
   const [lecturerData, setLecturerData] = useState(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is authenticated and is a lecturer
-    const isAuthenticated = localStorage.getItem("isAuthenticated");
-    const userData = localStorage.getItem("user");
-
-    if (!isAuthenticated || !userData) {
-      navigate("/");
-      return;
-    }
-
-    try {
-      const userObj = JSON.parse(userData);
-
-      // Check if user is a lecturer
-      if (userObj.role !== "lecturer") {
-        navigate("/dashboard"); // Redirect to student dashboard
-        return;
-      }
-
-      setUser(userObj);
-      setLecturerData(mockLecturerData);
-    } catch (error) {
-      console.error("Error parsing user data:", error);
-      navigate("/");
-    }
-  }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("isAuthenticated");
-    navigate("/");
-  };
+    // Set mock lecturer data
+    setLecturerData(mockLecturerData);
+  }, []);
 
   const formatDateTime = (dateTime) => {
     return new Date(dateTime).toLocaleString("en-US", {
@@ -141,14 +113,14 @@ const LecturerDashboard = () => {
   if (!user || !lecturerData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        Loading...
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
     <>
-      <Navbar user={user} onLogout={handleLogout} />
+      <LecturerNavbar />
       <div className="min-h-[80vh] flex flex-col items-center bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 px-2 py-8">
         <div className="bg-white/90 shadow-2xl rounded-2xl p-10 w-full max-w-2xl flex flex-col items-center mb-12 border border-blue-100">
           <h1 className="text-4xl font-extrabold text-blue-700 mb-3 text-center drop-shadow">
@@ -200,24 +172,22 @@ const LecturerDashboard = () => {
                       <div>Course Code: {cls.code}</div>
                       <div>Semester: {cls.semester}</div>
                       <div>Students: {cls.studentCount}</div>
-                      <div>
-                        Active Contests: {cls.activeContests}/
-                        {cls.totalContests}
-                      </div>
+                      <div>Active Contests: {cls.activeContests}</div>
+                      <div>Total Contests: {cls.totalContests}</div>
                     </div>
 
-                    <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
                       <Link
-                        to={`/lecturer/class/${cls.id}`}
-                        className="btn btn-primary btn-sm w-full"
+                        to={`/lecturer/contests?class=${cls.id}`}
+                        className="btn btn-primary btn-sm flex-1"
                       >
-                        Manage Class
+                        Manage Contests
                       </Link>
                       <Link
-                        to={`/lecturer/class/${cls.id}/progress`}
-                        className="btn btn-outline btn-primary btn-sm w-full"
+                        to={`/lecturer/submissions?class=${cls.id}`}
+                        className="btn btn-outline btn-primary btn-sm flex-1"
                       >
-                        View Progress
+                        View Submissions
                       </Link>
                     </div>
                   </div>
@@ -228,26 +198,11 @@ const LecturerDashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="w-full max-w-4xl mb-8">
+        <div className="w-full max-w-6xl mb-8">
           <h3 className="text-xl font-bold text-blue-700 mb-4 text-center">
             Quick Actions
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Link
-              to="/lecturer/submissions"
-              className="card bg-white/80 border border-blue-100 shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-200 rounded-xl p-6 flex flex-col items-center gap-2 cursor-pointer group"
-            >
-              <span className="material-icons text-blue-500 text-4xl mb-2 group-hover:text-blue-700 transition-colors">
-                assignment
-              </span>
-              <h2 className="card-title text-xl font-bold text-blue-700 group-hover:text-blue-900">
-                View Submissions
-              </h2>
-              <p className="text-gray-600 text-center text-base">
-                Monitor student submissions and verdicts
-              </p>
-            </Link>
-
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Link
               to="/lecturer/contests"
               className="card bg-white/80 border border-blue-100 shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-200 rounded-xl p-6 flex flex-col items-center gap-2 cursor-pointer group"
@@ -255,11 +210,26 @@ const LecturerDashboard = () => {
               <span className="material-icons text-blue-500 text-4xl mb-2 group-hover:text-blue-700 transition-colors">
                 emoji_events
               </span>
-              <h2 className="card-title text-xl font-bold text-blue-700 group-hover:text-blue-900">
+              <h2 className="card-title text-lg font-bold text-blue-700 group-hover:text-blue-900">
                 Manage Contests
               </h2>
-              <p className="text-gray-600 text-center text-base">
-                Set contest times and manage events
+              <p className="text-gray-600 text-center text-sm">
+                Create and manage contests
+              </p>
+            </Link>
+
+            <Link
+              to="/lecturer/submissions"
+              className="card bg-white/80 border border-blue-100 shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-200 rounded-xl p-6 flex flex-col items-center gap-2 cursor-pointer group"
+            >
+              <span className="material-icons text-blue-500 text-4xl mb-2 group-hover:text-blue-700 transition-colors">
+                assignment
+              </span>
+              <h2 className="card-title text-lg font-bold text-blue-700 group-hover:text-blue-900">
+                View Submissions
+              </h2>
+              <p className="text-gray-600 text-center text-sm">
+                Review student submissions
               </p>
             </Link>
 
@@ -270,11 +240,26 @@ const LecturerDashboard = () => {
               <span className="material-icons text-blue-500 text-4xl mb-2 group-hover:text-blue-700 transition-colors">
                 download
               </span>
-              <h2 className="card-title text-xl font-bold text-blue-700 group-hover:text-blue-900">
-                Download Submissions
+              <h2 className="card-title text-lg font-bold text-blue-700 group-hover:text-blue-900">
+                Downloads
               </h2>
-              <p className="text-gray-600 text-center text-base">
-                Export submissions for review and scoring
+              <p className="text-gray-600 text-center text-sm">
+                Download reports and data
+              </p>
+            </Link>
+
+            <Link
+              to="/lecturer/classes"
+              className="card bg-white/80 border border-blue-100 shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-200 rounded-xl p-6 flex flex-col items-center gap-2 cursor-pointer group"
+            >
+              <span className="material-icons text-blue-500 text-4xl mb-2 group-hover:text-blue-700 transition-colors">
+                school
+              </span>
+              <h2 className="card-title text-lg font-bold text-blue-700 group-hover:text-blue-900">
+                My Classes
+              </h2>
+              <p className="text-gray-600 text-center text-sm">
+                View class details and stats
               </p>
             </Link>
           </div>
@@ -285,7 +270,7 @@ const LecturerDashboard = () => {
           <div className="bg-white/95 shadow-2xl rounded-2xl p-0 border border-blue-100">
             <div className="flex items-center gap-3 px-8 py-6 border-b border-blue-100 rounded-t-2xl bg-gradient-to-r from-blue-50 to-blue-100">
               <span className="material-icons text-blue-500 text-3xl">
-                schedule
+                assignment
               </span>
               <h2 className="text-2xl font-bold text-blue-700">
                 Recent Submissions
@@ -298,55 +283,48 @@ const LecturerDashboard = () => {
                   No recent submissions
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {lecturerData.recentSubmissions.map((submission) => (
-                    <div
-                      key={submission.id}
-                      className="card bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-lg p-4"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`badge ${getStatusColor(
-                              submission.status
-                            )} badge-sm`}
-                          >
-                            {submission.status}
-                          </div>
-                          <span className="text-sm text-gray-600">
-                            {submission.className}
-                          </span>
-                        </div>
-                        <div className="text-right text-sm text-gray-600">
-                          {formatDateTime(submission.submittedAt)}
-                        </div>
-                      </div>
-
-                      <div className="text-sm text-gray-600 space-y-1">
-                        <div>
-                          <span className="font-semibold">Student:</span>{" "}
-                          {submission.studentName} ({submission.studentNim})
-                        </div>
-                        <div>
-                          <span className="font-semibold">Case:</span>{" "}
-                          {submission.caseTitle}
-                        </div>
-                        <div>
-                          <span className="font-semibold">Score:</span>{" "}
-                          {submission.score} points
-                        </div>
-                      </div>
-
-                      <div className="mt-3">
-                        <Link
-                          to={`/lecturer/submission/${submission.id}`}
-                          className="btn btn-outline btn-primary btn-xs"
-                        >
-                          View Details
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
+                <div className="overflow-x-auto">
+                  <table className="table table-zebra w-full">
+                    <thead>
+                      <tr>
+                        <th>Student</th>
+                        <th>Case</th>
+                        <th>Class</th>
+                        <th>Status</th>
+                        <th>Score</th>
+                        <th>Submitted</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lecturerData.recentSubmissions.map((submission) => (
+                        <tr key={submission.id}>
+                          <td>
+                            <div>
+                              <div className="font-bold">
+                                {submission.studentName}
+                              </div>
+                              <div className="text-sm opacity-50">
+                                {submission.studentNim}
+                              </div>
+                            </div>
+                          </td>
+                          <td>{submission.caseTitle}</td>
+                          <td>{submission.className}</td>
+                          <td>
+                            <span
+                              className={`badge ${getStatusColor(
+                                submission.status
+                              )}`}
+                            >
+                              {submission.status}
+                            </span>
+                          </td>
+                          <td>{submission.score}</td>
+                          <td>{formatDateTime(submission.submittedAt)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
