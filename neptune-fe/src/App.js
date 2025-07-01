@@ -5,25 +5,25 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import Login from "./Login";
-import Dashboard from "./Dashboard";
-import Submission from "./Submission";
-import Leaderboard from "./Leaderboard";
-import Contests from "./Contests";
-import ContestDetail from "./ContestDetail";
-import CaseDetail from "./CaseDetail";
-import SubmissionHistory from "./SubmissionHistory";
-import LecturerDashboard from "./LecturerDashboard";
-import LecturerSubmissions from "./LecturerSubmissions";
-import LecturerContests from "./LecturerContests";
-import LecturerDownloads from "./LecturerDownloads";
-import AdminDashboard from "./AdminDashboard";
-import AdminClasses from "./AdminClasses";
-import AdminUsers from "./AdminUsers";
-import AdminContests from "./AdminContests";
-import AdminCases from "./AdminCases";
-import AdminSubmissions from "./AdminSubmissions";
-import AdminReports from "./AdminReports";
+import Login from "./pages/User/Login";
+import Dashboard from "./pages/User/Dashboard";
+import Submission from "./pages/User/Submission";
+import Leaderboard from "./components/Leaderboard/Leaderboard";
+import Contests from "./pages/Admin/ContestsList";
+import ContestDetail from "./pages/Admin/ContestDetail";
+import CaseDetail from "./pages/Admin/CaseDetail";
+import SubmissionHistory from "./pages/User/SubmissionHistory";
+import LecturerDashboard from "./pages/Lecturer/Dashboard";
+import LecturerSubmissions from "./pages/Lecturer/Submissions";
+import LecturerContests from "./pages/Lecturer/Contests";
+import LecturerDownloads from "./pages/Lecturer/Downloads";
+import AdminDashboard from "./pages/Admin/Dashboard";
+import AdminClasses from "./pages/Admin/Classes";
+import AdminUsers from "./pages/Admin/Users";
+import AdminContests from "./pages/Admin/Contests";
+import AdminCases from "./pages/Admin/Cases";
+import AdminSubmissions from "./pages/Admin/Submissions";
+import AdminReports from "./pages/Admin/Reports";
 
 // Protected Route Component for Students
 const ProtectedRoute = ({ children }) => {
