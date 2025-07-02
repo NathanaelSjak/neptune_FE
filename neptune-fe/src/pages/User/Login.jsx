@@ -124,6 +124,23 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-400 to-blue-600 relative overflow-hidden">
+      {/* Development Mode Notice */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="absolute top-4 left-4 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded z-20">
+          <div className="flex items-center">
+            <span className="text-lg mr-2">⚠️</span>
+            <div>
+              <strong>Development Mode:</strong> Login is bypassed. You will be
+              automatically logged in as a student.
+              <br />
+              <span className="text-sm">
+                Use the dev panel in the bottom-right corner to switch roles.
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Animated background lines (optional, can be added later) */}
       <div className="z-10 w-full flex flex-col items-center">
         <div className="bg-white shadow-xl rounded-lg p-8 w-80 flex flex-col items-center">

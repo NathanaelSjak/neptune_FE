@@ -25,6 +25,7 @@ import AdminContests from "./pages/Admin/Contests";
 import AdminCases from "./pages/Admin/Cases";
 import AdminSubmissions from "./pages/Admin/Submissions";
 import AdminReports from "./pages/Admin/Reports";
+import DevBypass from "./components/DevBypass";
 
 // Loading component
 const LoadingSpinner = () => (
@@ -279,6 +280,7 @@ function App() {
     <Router>
       <AuthProvider>
         <AppRoutes />
+        <DevBypass />
       </AuthProvider>
     </Router>
   );

@@ -8,6 +8,74 @@ import {
 import { useNavigate } from "react-router-dom";
 import { authAPI } from "../services/api";
 
+// Development bypass flag - set to true to skip login
+const BYPASS_LOGIN = true; // Change this to false when backend is ready
+
+// Mock user data for development
+const MOCK_USERS = {
+  student: {
+    nim: "12345678",
+    name: "John Doe",
+    email: "12345678@binus.ac.id",
+    role: "student",
+    enrolledClasses: [
+      {
+        id: 1,
+        name: "Programming Fundamentals",
+        code: "COMP6047",
+        semester: "2024/2025-1",
+      },
+      {
+        id: 2,
+        name: "Data Structures",
+        code: "COMP6048",
+        semester: "2024/2025-1",
+      },
+      {
+        id: 3,
+        name: "Algorithm Design",
+        code: "COMP6049",
+        semester: "2024/2025-1",
+      },
+    ],
+  },
+  lecturer: {
+    nim: "87654321",
+    name: "Dr. Sarah Johnson",
+    email: "sarah.johnson@binus.ac.id",
+    role: "lecturer",
+    department: "Computer Science",
+    assignedClasses: [
+      {
+        id: 1,
+        name: "Programming Fundamentals",
+        code: "COMP6047",
+        semester: "2024/2025-1",
+      },
+      {
+        id: 2,
+        name: "Data Structures",
+        code: "COMP6048",
+        semester: "2024/2025-1",
+      },
+      {
+        id: 3,
+        name: "Algorithm Design",
+        code: "COMP6049",
+        semester: "2024/2025-1",
+      },
+    ],
+  },
+  admin: {
+    nim: "admin",
+    name: "Dr. Michael Chen",
+    email: "michael.chen@binus.ac.id",
+    role: "admin",
+    department: "Software Laboratory Center",
+    assignedClasses: [],
+  },
+};
+
 // Create authentication context
 const AuthContext = createContext();
 
@@ -28,10 +96,58 @@ export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
 
+  // Development bypass function
+  const bypassLogin = useCallback(
+    async (role = "student") => {
+      if (!BYPASS_LOGIN) return false;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Simulate API delay
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        const mockUser = MOCK_USERS[role];
+        const mockToken = `mock-token-${role}-${Date.now()}`;
+
+        // Store authentication data
+        localStorage.setItem("token", mockToken);
+        localStorage.setItem("user", JSON.stringify(mockUser));
+        localStorage.setItem("isAuthenticated", "true");
+
+        setUser(mockUser);
+        setIsAuthenticated(true);
+
+        // Redirect based on role
+        if (mockUser.role === "admin") {
+          navigate("/admin/dashboard");
+        } else if (mockUser.role === "lecturer") {
+          navigate("/lecturer/dashboard");
+        } else {
+          navigate("/dashboard");
+        }
+
+        return true;
+      } catch (err) {
+        setError("Bypass login failed");
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [navigate]
+  );
+
   // Check if token is valid
   const isTokenValid = useCallback(() => {
     const token = localStorage.getItem("token");
     if (!token) return false;
+
+    // For development bypass, always consider mock tokens as valid
+    if (BYPASS_LOGIN && token.startsWith("mock-token-")) {
+      return true;
+    }
 
     try {
       // Check if token is expired (if it's a JWT)
@@ -60,6 +176,18 @@ export const useAuth = () => {
         throw new Error("Invalid or expired token");
       }
 
+      // For development bypass, use stored mock data
+      if (BYPASS_LOGIN) {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          setUser(userData);
+          setIsAuthenticated(true);
+          setLoading(false);
+          return;
+        }
+      }
+
       // Get user profile from backend
       const response = await authAPI.getProfile();
       const userData = response.data;
@@ -69,8 +197,12 @@ export const useAuth = () => {
       localStorage.setItem("user", JSON.stringify(userData));
       localStorage.setItem("isAuthenticated", "true");
     } catch (err) {
-      // Clear invalid authentication data
-      logout();
+      // Clear invalid authentication data without calling logout to avoid circular dependency
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("isAuthenticated");
+      setUser(null);
+      setIsAuthenticated(false);
       setError(err.message || "Authentication failed");
     } finally {
       setLoading(false);
@@ -135,8 +267,8 @@ export const useAuth = () => {
   // Logout function
   const logout = useCallback(async () => {
     try {
-      // Call logout endpoint if authenticated
-      if (isAuthenticated) {
+      // Call logout endpoint if authenticated and not in bypass mode
+      if (isAuthenticated && !BYPASS_LOGIN) {
         await authAPI.logout();
       }
     } catch (error) {
@@ -178,8 +310,42 @@ export const useAuth = () => {
 
   // Check authentication on mount and when dependencies change
   useEffect(() => {
-    validateAuth();
-  }, [validateAuth]);
+    // If bypass is enabled and no user is logged in, automatically log in as student
+    if (BYPASS_LOGIN && !isAuthenticated && !user && !loading) {
+      // Use a separate effect to avoid dependency issues
+      const performBypassLogin = async () => {
+        setLoading(true);
+        setError(null);
+
+        try {
+          // Simulate API delay
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
+          const mockUser = MOCK_USERS.student;
+          const mockToken = `mock-token-student-${Date.now()}`;
+
+          // Store authentication data
+          localStorage.setItem("token", mockToken);
+          localStorage.setItem("user", JSON.stringify(mockUser));
+          localStorage.setItem("isAuthenticated", "true");
+
+          setUser(mockUser);
+          setIsAuthenticated(true);
+
+          // Redirect based on role
+          navigate("/dashboard");
+        } catch (err) {
+          setError("Bypass login failed");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      performBypassLogin();
+    } else if (!BYPASS_LOGIN) {
+      validateAuth();
+    }
+  }, [validateAuth, isAuthenticated, user, loading, navigate]);
 
   // Set up periodic token validation (every 5 minutes)
   useEffect(() => {
@@ -204,6 +370,7 @@ export const useAuth = () => {
     refreshToken,
     validateAuth,
     clearError,
+    bypassLogin,
   };
 };
 
@@ -228,7 +395,7 @@ export const useAuthState = () => {
 
 // Hook for components that need auth actions
 export const useAuthActions = () => {
-  const { login, logout, refreshToken, validateAuth, clearError } =
+  const { login, logout, refreshToken, validateAuth, clearError, bypassLogin } =
     useAuthContext();
 
   return {
@@ -237,5 +404,6 @@ export const useAuthActions = () => {
     refreshToken,
     validateAuth,
     clearError,
+    bypassLogin,
   };
 };
